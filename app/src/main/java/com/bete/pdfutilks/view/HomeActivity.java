@@ -26,6 +26,7 @@ public class HomeActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.activity_home, null);
         homeBinding = ActivityHomeBinding.bind(view);
         setContentView(homeBinding.getRoot());
+        ITextUtils.test();
         initView();
     }
 

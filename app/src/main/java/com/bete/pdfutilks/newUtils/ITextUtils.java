@@ -1,12 +1,13 @@
 package com.bete.pdfutilks.newUtils;
 
+import static com.itextpdf.text.pdf.BaseFont.IDENTITY_H;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.SystemClock;
+import android.widget.Toast;
 
 import com.bete.pdfutilks.R;
 import com.bete.pdfutilks.utils.FileCommonUtil;
@@ -36,7 +37,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,13 +58,21 @@ public class ITextUtils {
      * @throws DocumentException
      * @throws IOException
      */
-    public static BaseFont getBaseFont() throws DocumentException, IOException {
-//        return BaseFont.createFont(PDFUtils.class.getResource("/pdf/simsun.ttc").getFile()+",1",BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+    public static BaseFont getBaseFont() throws Exception {
         if (mBaseFont == null) {
 
             BaseFont baseFont = null;
             try {
-                baseFont = BaseFont.createFont("assets/fonts/brandon_medium.otf", "UTF-8", BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("assets/fonts/brandon_medium.otf", "UTF-8", BaseFont.EMBEDDED);
+                // 默认使用免费商用 免费个人使用的字体 站酷仓耳渔阳体
+//                baseFont = BaseFont.createFont("assets/fonts/zkceyyt.ttf", IDENTITY_H, BaseFont.EMBEDDED);
+                // 测试使用 ass默认的字体
+                baseFont = BaseFont.createFont("assets/fonts/zkceyyt.ttf", IDENTITY_H, BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("STSong-Light", IDENTITY_H, BaseFont.EMBEDDED);
+
+                // todo 使用 方正宋体需要版权授予
+//                baseFont = BaseFont.createFont("assets/fonts/FZYTK.TTF", IDENTITY_H, BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("assets/fonts/brandon_medium.otf", IDENTITY_H, BaseFont.EMBEDDED);
             } catch (DocumentException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -72,8 +80,6 @@ public class ITextUtils {
             }
             Font font1 = new Font(baseFont, 12, Font.NORMAL);
             font1.setColor(BaseColor.BLACK);
-
-//            return BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
             return baseFont;
         } else
             return mBaseFont;
@@ -164,10 +170,12 @@ public class ITextUtils {
         document.add(table);
     }
 
-    public static void addNullLine(Document document, int insertLineNum) throws Exception {
+    public static void addNullLine(Document document, int insertLineNum, int... height) throws Exception {
+        int LineHeight = 1;
+        if (height.length > 0)
+            LineHeight = height[0];
         for (int i = 0; i < insertLineNum; i++)
-            document.add(Chunk.NEWLINE);
-
+            document.add(Chunk.NEWLINE.setLineHeight(LineHeight));
     }
 
 
@@ -204,13 +212,38 @@ public class ITextUtils {
      * @throws Exception
      */
     public static void addContent(Document document, String value) throws Exception {
-        LogUtils.e("print value is : " + value);
-        BaseFont baseFont = getBaseFont();
-        Font font1 = new Font(baseFont, 12, Font.NORMAL);
+        Font font1 = new Font(getBaseFont(), 12, Font.NORMAL);
         font1.setColor(BaseColor.BLACK);
         //添加内容
         Paragraph elements = new Paragraph(value, font1);
+        LogUtils.e("要打印的文字为 ： " + elements.getContent());
+
         document.add(elements);
+
+    }
+
+
+    public static void addContentUse(String line, Document document) throws Exception {
+        // FOR Chinese
+//        String otf4 = "assets/fonts/FZYTK.TTF";
+//        BaseFont baseFont = BaseFont.createFont(otf4, IDENTITY_H, BaseFont.EMBEDDED);
+        Font font = new Font(getBaseFont(), 6.8f);
+        Paragraph par = new Paragraph();
+        par.setLeading(9);
+        char[] aa = line.toCharArray();
+        boolean isLastChineseChar = false;
+        StringBuilder newLine = new StringBuilder();
+        for (int j = 0; j < line.length(); j++) {
+            if (isLastChineseChar) {
+                par.add(new Phrase(newLine.toString(), font));
+                newLine.delete(0, newLine.length());
+                isLastChineseChar = false;
+            }
+            newLine.append(aa[j]);
+        }
+        par.add(new Phrase(newLine.toString(), font));
+        par.setAlignment(Element.ALIGN_LEFT);
+        document.add(par);
 
     }
 
@@ -246,8 +279,7 @@ public class ITextUtils {
             ArrayList<String> mergeListCells, List<List<String>> mValue,
             int spacingBefore, int spacingAfter, boolean hasFrame
     ) throws Exception {
-        BaseFont baseFont = BaseFont.createFont("assets/fonts/brandon_medium.otf", "UTF-8", BaseFont.EMBEDDED);
-        Font font = new Font(baseFont, 12, Font.NORMAL);
+        Font font = new Font(getBaseFont(), 12, Font.NORMAL);
         font.setColor(BaseColor.BLACK);
 
         // 添加空单元格到剩余的位置
@@ -479,7 +511,7 @@ public class ITextUtils {
      *
      * @return
      */
-    public static boolean test()  {
+    public static boolean test() {
 
         FileCommonUtil.createOrExistsDir("/sdcard/data");
         // 1. 将图片保存到sd卡中
@@ -489,9 +521,9 @@ public class ITextUtils {
         if (file.exists()) {
             file.delete();
         }
-        //创建Document 对象
-        try {
 
+        try {
+            // todo 1. 将 gfgimage保存一下
             File imageFile = new File("/sdcard/data/gfgimage.jpg");
             if (!imageFile.exists()) {
                 // 将图片保存到相对应的位置 中
@@ -502,6 +534,7 @@ public class ITextUtils {
                 outputStream.close();
             }
 
+            //创建Document 对象
             Document document = new Document();
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             PdfWriter writer = PdfWriter.getInstance(document, fileOutputStream);
@@ -510,58 +543,51 @@ public class ITextUtils {
 
             // 1. 加入 标题
             addTitile(document, "this is my title ");
-//            initCellLists(5, 4);
             initCellLists(8, 4);
-//            addCellLists(1);
             addCellLists(3);
-
             mergeCellLists(1, 1, 1, 3);
-
             mergeCellLists(3, 2, 3, 1);
-
             mergeCellLists(4, 4, 2, 2);
-
             setCellListsText();//0,0,0,0
             setCellTextColor(0, 0, BaseColor.BLUE);
             saveCellListsToDoc(document, 10, 10);
 
             // 插入图片 如果插入资源图片是否会出现插入时间慢的问题 ？
-//            addResuceFileImg(Utils.getApp(), R.drawable.dog, Bitmap.CompressFormat.PNG, document);
+            addResuceFileImg(Utils.getApp(), R.drawable.dog, Bitmap.CompressFormat.PNG, document);
+
             addLine(document, BaseColor.BLUE, 1f);
 
-            addNullLine(document, 2);
+            addNullLine(document, 1);
 
             addSdCardFileImg("/sdcard/data/gfgimage.jpg", document);
-            addNullLine(document, 1);
-            addDottedLine(document, BaseColor.PINK, 3f);
-
-            addContent(document, "11111");
 
             addNullLine(document, 1);
 
-            addUnderLineContent(document, "5555");
+            addDottedLine(document, BaseColor.PINK, 1f);
+
+            addContent(document, "ceshi");
+
+            addNullLine(document, 1);
+
+            addUnderLineContent(document, "作者名称");
 
             addNullLine(document, 1);
 
             addUnderLineContent(document, "           ");
 
             addNullLine(document, 1);
-            try {
-                addContent(document, "怒发冲冠，凭阑处、潇潇雨歇。抬望眼，仰天长啸，壮怀激烈。\n" +
-                        "三十功名尘与土，八千里路云和月。莫等闲，白了少年头，空悲切！\n" +
-                        "\n" +
-                        "靖康耻，犹未雪；臣子恨，何时灭？驾长车，踏破贺兰山缺。\n" +
-                        "壮志饥餐胡虏肉，笑谈渴饮匈奴血。待从头，收拾旧山河，朝天阙。");
-            }catch (Exception exception){
-                exception.printStackTrace();
-                LogUtils.e("ex : content value is " + exception);
-            }
 
+            addContent(document, "怒发冲冠，凭阑处、潇潇雨歇。抬望眼，仰天长啸，壮怀激烈。\n" +
+                    "三十功名尘与土，八千里路云和月。莫等闲，白了少年头，空悲切！\n" +
+                    "\n" +
+                    "靖康耻，犹未雪；臣子恨，何时灭？驾长车，踏破贺兰山缺。\n" +
+                    "壮志饥餐胡虏肉，笑谈渴饮匈奴血。待从头，收拾旧山河，朝天阙。");
 
             //使用工具类关闭 document 与 writer
             ITextUtils.getAllClose(document, writer);
             fileOutputStream.close();
-//            Toast.makeText(this, "pdf 生成 成功 !", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(Utils.getApp(), "pdf 生成 成功 !", Toast.LENGTH_SHORT).show();
             return true;
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -579,7 +605,8 @@ public class ITextUtils {
     }
 
     private static void addSdCardFileImg(String charPath, Document document) throws Exception {
-        addSdCardFileImg(charPath, document, 630f, 730f);
+//        addSdCardFileImg(charPath, document, 630f, 730f);
+        addSdCardFileImg(charPath, document, 120f, 120f);
     }
 
 
@@ -594,7 +621,8 @@ public class ITextUtils {
     private static void addResuceFileImg(Context context, int drawableImageRes,
                                          Bitmap.CompressFormat bitmapFormat,
                                          Document document) throws Exception {
-        addResuceFileImg(context, drawableImageRes, bitmapFormat, document, 630f, 730f);
+//        addResuceFileImg(context, drawableImageRes, bitmapFormat, document, 630f, 730f);
+        addResuceFileImg(context, drawableImageRes, bitmapFormat, document, 120f, 120f);
     }
 
 

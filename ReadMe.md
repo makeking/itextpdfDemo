@@ -28,7 +28,8 @@
 -  addLine 添加实线
 - addDottedLine 添加点线 
 - addUnderLineContent 添加下划线 
+- addContentUse 中文的测试内容 
 
 ##  现在还存在的问题：
-1. 加载 drawab 会感觉很慢
-2. 暂时无法添加中文
+1. 加载 drawab 会感觉很慢 ,问题的原因是换页导致的问题，暂时无法解决 
+2. 暂时无法添加中文 已解决，将 encoding 由 utf-8 修改为 IDENTITY_H 
