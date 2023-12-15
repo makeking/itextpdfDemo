@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">PdfUtils</string>
+    <string name="shengchengpdfwenj">生成PDF文件</string>
+    <string name="wenjian_chuangjian">文件创建</string>
+    <string name="tipInfo">提示信息</string>
+    <string name="queding">确定</string>
+    <string name="quxiao">取消</string>
+    <string name="cancel">取消</string>
+    <string name="splashTipInfo">当前应用缺少必要权限，该功能暂时无法使用。如若需要，请单击【确定】按钮前往设置中心进行权限授权。</string>
+</resources>

@@ -1,0 +1,4 @@
+rootProject.name = "PdfUtils"
+include ':app'
+//include ':library'
+//include ':createPdfModel'
