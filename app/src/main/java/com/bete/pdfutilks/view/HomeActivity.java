@@ -26,14 +26,14 @@ public class HomeActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.activity_home, null);
         homeBinding = ActivityHomeBinding.bind(view);
         setContentView(homeBinding.getRoot());
-        ITextUtils.test();
+        ITextUtils.getInstace().test();
         initView();
     }
 
     private void initView() {
         homeBinding.fab.setOnClickListener(v ->
         {
-            boolean result = ITextUtils.test();
+            boolean result =  ITextUtils.getInstace().test();
 
 
         });

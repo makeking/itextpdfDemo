@@ -7,4 +7,5 @@
     <string name="quxiao">取消</string>
     <string name="cancel">取消</string>
     <string name="splashTipInfo">当前应用缺少必要权限，该功能暂时无法使用。如若需要，请单击【确定】按钮前往设置中心进行权限授权。</string>
+    <string name="operate_fail">操作失败，初始化后再次进行操作！</string>
 </resources>

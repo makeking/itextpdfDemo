@@ -10,8 +10,10 @@ import android.graphics.drawable.Drawable;
 import android.widget.Toast;
 
 import com.bete.pdfutilks.R;
+import com.bete.pdfutilks.bean.MergedCellBean;
 import com.bete.pdfutilks.utils.FileCommonUtil;
 import com.bete.pdfutilks.utils.LogUtils;
+import com.bete.pdfutilks.utils.StringUtils;
 import com.bete.pdfutilks.utils.Utils;
 import com.itextpdf.text.AccessibleElementId;
 import com.itextpdf.text.BaseColor;
@@ -49,16 +51,31 @@ import java.util.List;
 public class ITextUtils {
 
     public static BaseFont mBaseFont = null;
+    public static LinkedList<AccessibleElementId> usrcelllists = new LinkedList<AccessibleElementId>();
+    public static LinkedList<MergedCellBean> mergedCellList = new LinkedList<>();
+    public static LinkedList<LinkedList<PdfPCell>> celllists;
+
+    static {
+        mergedCellList.clear();
+        celllists = new LinkedList<>();
+        celllists.add(new LinkedList<>());
+        for (LinkedList<PdfPCell> cells : celllists) {
+            cells.clear();
+        }
+    }
+
+    public static void setBaseFont(BaseFont baseFont) {
+        mBaseFont = baseFont;
+
+    }
 
     /**
      * 设置java适应字体
-     * todo 暂时使用 这个字体，之后进行修改
      *
-     * @return
      * @throws DocumentException
      * @throws IOException
      */
-    public static BaseFont getBaseFont() throws Exception {
+    public BaseFont getBaseFont() throws Exception {
         if (mBaseFont == null) {
 
             BaseFont baseFont = null;
@@ -86,17 +103,12 @@ public class ITextUtils {
 
     }
 
-    public static void setBaseFont(BaseFont baseFont) {
-        mBaseFont = baseFont;
-
-    }
-
     /**
      * 删除图片
      *
      * @param path
      */
-    public static void getDeleteFile(String path) {
+    public void getDeleteFile(String path) {
         try {
             File file = new File(path);
             file.delete();
@@ -106,7 +118,6 @@ public class ITextUtils {
         }
     }
 
-
     /**
      * 添加标题类型
      *
@@ -115,7 +126,11 @@ public class ITextUtils {
      * @param titile   要设置额的字体大小
      * @throws Exception
      */
-    public static void addTitile(Document document, String value, int... titile) throws Exception {
+    public void addTitile(Document document, String value, int... titile) throws Exception {
+        if (document == null)
+            throw new OperateExcetion("Document is null ");
+        if (StringUtils.isEmpty(value))
+            value = "";
         int titileSize = 18;
         if (titile.length > 0)
             titileSize = titile[0];
@@ -136,7 +151,7 @@ public class ITextUtils {
      * @param spacingAfter  后间距，如果不需要设置请使用 -1 ，默认为 10
      * @throws Exception
      */
-    public static void addNormalTable(Document document
+    public void addNormalTable(Document document
             , LinkedList<LinkedList<String>> mValue, int spacingBefore, int spacingAfter, boolean haseFrame
 
     ) throws Exception {
@@ -151,7 +166,6 @@ public class ITextUtils {
         for (int i = 0; i < mValue.get(0).size(); i++)
             columnWidths[i] = 1;
         table.setWidths(columnWidths);
-
         //行1
         for (int i = 0; i < mValue.size(); i++) {
             PdfPCell cells[] = new PdfPCell[mValue.get(i).size()];
@@ -170,10 +184,13 @@ public class ITextUtils {
         document.add(table);
     }
 
-    public static void addNullLine(Document document, int insertLineNum, int... height) throws Exception {
+    public void addNullLine(Document document, int insertLineNum, int... height) throws Exception {
+        if (document == null) throw new OperateExcetion("document is null");
+        if (insertLineNum <= 0) throw new OperateExcetion("insertLineNum is " + insertLineNum);
         int LineHeight = 1;
-        if (height.length > 0)
-            LineHeight = height[0];
+        if (height.length > 0) {
+            LineHeight = height[0] <= 0 ? 1 : height[0];
+        }
         for (int i = 0; i < insertLineNum; i++)
             document.add(Chunk.NEWLINE.setLineHeight(LineHeight));
     }
@@ -191,8 +208,7 @@ public class ITextUtils {
      * @param creator    应用程式
      * @throws Exception
      */
-    public static void addFileAttributes(Document document, String titile, String author,
-                                         String subject, String keywords, boolean createDate, String creator)
+    public void addFileAttributes(Document document, String titile, String author, String subject, String keywords, boolean createDate, String creator)
             throws Exception {
         document.addTitle(titile);
         document.addAuthor(author);
@@ -211,22 +227,20 @@ public class ITextUtils {
      * @param value
      * @throws Exception
      */
-    public static void addContent(Document document, String value) throws Exception {
+    public void addContent(Document document, String value) throws Exception {
+        if (document == null) throw new OperateExcetion("addLine method document is null ");
+        if (value == null)
+            value = "";
         Font font1 = new Font(getBaseFont(), 12, Font.NORMAL);
         font1.setColor(BaseColor.BLACK);
         //添加内容
         Paragraph elements = new Paragraph(value, font1);
-        LogUtils.e("要打印的文字为 ： " + elements.getContent());
-
         document.add(elements);
 
     }
 
 
-    public static void addContentUse(String line, Document document) throws Exception {
-        // FOR Chinese
-//        String otf4 = "assets/fonts/FZYTK.TTF";
-//        BaseFont baseFont = BaseFont.createFont(otf4, IDENTITY_H, BaseFont.EMBEDDED);
+    public void addContentUse(String line, Document document) throws Exception {
         Font font = new Font(getBaseFont(), 6.8f);
         Paragraph par = new Paragraph();
         par.setLeading(9);
@@ -255,7 +269,7 @@ public class ITextUtils {
      * @throws DocumentException
      * @throws FileNotFoundException
      */
-    public static void getAllClose(Document document, PdfWriter writer) throws DocumentException, FileNotFoundException {
+    public void getAllClose(Document document, PdfWriter writer) throws DocumentException, FileNotFoundException {
         //关闭文档
         document.close();
         //关闭书写器
@@ -269,11 +283,11 @@ public class ITextUtils {
      * @param insertColumn
      * @return
      */
-    public static PdfPTable getDefultTable(int insertColumn) {
+    public PdfPTable getDefultTable(int insertColumn) {
         return new PdfPTable(insertColumn);
     }
 
-    public static void addSpecialVerticalContentTable(
+    public void addSpecialVerticalContentTable(
             PdfPTable table,
             Document document, int insertRow, int insertColumn,
             ArrayList<String> mergeListCells, List<List<String>> mValue,
@@ -281,11 +295,9 @@ public class ITextUtils {
     ) throws Exception {
         Font font = new Font(getBaseFont(), 12, Font.NORMAL);
         font.setColor(BaseColor.BLACK);
-
         // 添加空单元格到剩余的位置
         for (int row = 0; row < insertRow; row++) {
             for (int column = 0; column < insertColumn; column++) {
-
                 if (shouldMergeCell(mergeListCells, row, column)) {
                     int[] mergedCellCoordinates = getMergedCellCoordinates(mergeListCells, row, column);
                     PdfPCell cell = new PdfPCell();
@@ -314,7 +326,7 @@ public class ITextUtils {
         document.add(table);
     }
 
-    private static boolean skipeCell(ArrayList<String> mergeListCells, int row, int col) {
+    private boolean skipeCell(ArrayList<String> mergeListCells, int row, int col) {
         for (String mergedCell : mergeListCells) {
             String[] coordinates = mergedCell.split(":");
             String startCoordinate = coordinates[0];
@@ -331,7 +343,7 @@ public class ITextUtils {
     }
 
     // 判断是否需要合并单元格
-    private static boolean shouldMergeCell(ArrayList<String> mergedCells, int row, int col) {
+    private boolean shouldMergeCell(ArrayList<String> mergedCells, int row, int col) {
         for (String mergedCell : mergedCells) {
             String[] coordinates = mergedCell.split(":");
             String startCoordinate = coordinates[0];
@@ -347,7 +359,7 @@ public class ITextUtils {
     }
 
     // 获取合并单元格的起始和结束坐标
-    private static int[] getMergedCellCoordinates(ArrayList<String> mergedCells, int row, int col) {
+    private int[] getMergedCellCoordinates(ArrayList<String> mergedCells, int row, int col) {
         for (String mergedCell : mergedCells) {
             String[] coordinates = mergedCell.split(":");
             String startCoordinate = coordinates[0];
@@ -367,28 +379,21 @@ public class ITextUtils {
     }
 
 
-    public static LinkedList<LinkedList<PdfPCell>> mPdfCellList;
-
-    public static LinkedList<LinkedList<PdfPCell>> celllists;
-
-    static {
-        celllists = new LinkedList<LinkedList<PdfPCell>>();
-        LinkedList<PdfPCell> a = new LinkedList<PdfPCell>();
-        celllists.add(a);
-        for (LinkedList<PdfPCell> cells : celllists) {
-            cells.clear();
-        }
-    }
-
-    public static void clearCellLists() {
+    public void clearCellLists() throws OperateExcetion {
+        if (celllists.size() <= 0)
+            throw new OperateExcetion("celllists size below 0 ");
 
         for (LinkedList<PdfPCell> cells : celllists) {
+            if (cells == null)
+                throw new OperateExcetion("celllists cotent size is null ");
             cells.clear();
         }
         celllists.clear();
     }
 
-    public static void initCellLists(int col, int row) {
+    public void initCellLists(int col, int row) throws OperateExcetion {
+        if (col <= 0 || row <= 0)
+            throw new OperateExcetion("init celll row or col below 0!");
         // 8 列 4 行
         clearCellLists();
         for (int j = 0; j < row; j++) {
@@ -404,7 +409,14 @@ public class ITextUtils {
 
     }
 
-    public static void addCellLists(int row) {
+    public static ITextUtils getInstace() {
+        return new ITextUtils();
+    }
+
+    public void addCellLists(int row) throws OperateExcetion {
+        if (celllists.size() == 0) {
+            throw new OperateExcetion(Utils.getApp().getString(R.string.operate_fail));
+        }
         int cellNum = celllists.get(0).size();
         for (int i = 0; i < row; i++) {
             LinkedList<PdfPCell> cells = new LinkedList<>();
@@ -418,90 +430,130 @@ public class ITextUtils {
         }
     }
 
-    public static boolean mergeCellLists(int col, int row, int collen, int rowlen) {
-        // 从 1行 1列 开始到 3 行 1列
-        //todo 先判断
+
+    /**
+     * @param col    输入需要操作的列数，列数从 1开始
+     * @param row    输入需要操作的行数，行数从 1开始
+     * @param collen 输入要合并的列数，列数从 1 开始
+     * @param rowlen 输入要合并的行数，行数从 1 开始
+     * @throws OperateExcetion
+     */
+    public void mergeCellLists(int col, int row, int collen, int rowlen) throws OperateExcetion {
+        int currentCol = col - 1;
+        int currentrow = row - 1;
         int colsize = collen;
         int rowsize = rowlen;
-        if (col == celllists.get(0).size()) {
-            // 合并失败
-            return false;
-        } else if (row == celllists.size()) {
-            // 合并失败
-            return false;
-        } else if (col + colsize > celllists.size()) {
-            return false;
-        } else if (row + rowsize > celllists.get(0).size()) {
-            return false;
+        getInputValueState(col, row, colsize, rowsize);
+        boolean cellMergedState = getCellMergedState(col, row, collen, rowlen);
+        if (cellMergedState) { // todo 这里是否需要抛出操作异常？
+//            throw new OperateExcetion(" input cell is merge . ");
+            LogUtils.e(" input cell is merge . ");
+            return;
         }
+        // 判断单元格是否已经合并
         PdfPCell cell = new PdfPCell();
         cell.setRowspan(rowsize);
         cell.setColspan(colsize);
-        LogUtils.d("merge row :" + rowsize + " colsize : " + colsize);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);//水平居中
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);//垂直居中
-
-        for (int j = row; j < row + rowsize; j++) {
-            for (int i = col; i < col + colsize; i++) {
-                LogUtils.e(" start value is : " + i + " j : " + j);
-//                celllists.get(i).set(j, cell);
+        for (int j = currentrow; j < currentrow + rowsize; j++) {
+            for (int i = currentCol; i < currentCol + colsize; i++) {
+//                LogUtils.e(" start value is : " + i + " j : " + j);
+//                celllists.get(j).set(i, cell);
                 celllists.get(j).set(i, cell);
             }
         }
-        return true;
+//        celllists.get(currentrow).set(currentCol, cell);
+
+        for (int i = currentrow; i < currentrow + rowsize; i++) {
+            for (int j = currentCol; j < currentCol + colsize; j++)
+                mergedCellList.add(new MergedCellBean(i, j));
+        }
     }
 
-    public static void setCellListsText() throws Exception {//int col,int row,String text,Font font
-        BaseFont baseFont = getBaseFont();
-        Font font1 = new Font(baseFont, 12, Font.NORMAL);
+    private void getInputValueState(int currentCol, int currentrow, int colsize, int rowsize) throws OperateExcetion {
+        if (celllists.size() == 0)
+            throw new OperateExcetion("mergeCellLists method show celllists size is 0 ");
+        if (currentCol < 0 || currentrow < 0 || colsize <= 0 || rowsize <= 0)
+            throw new OperateExcetion(" mergeCellLists method operate data < 0  ");
+        LinkedList<PdfPCell> pdfPCells = celllists.get(0);
+        if (pdfPCells == null || pdfPCells.size() == 0)
+            throw new OperateExcetion(" mergeCellLists method operate celllists.get(0) is null or empty  ");
+        if (currentCol == celllists.get(0).size() && colsize > 1)
+            throw new OperateExcetion(" mergeCellLists method  operate size is end and operate len is :" + colsize);
+        if (currentrow == celllists.size() && rowsize > 1)
+            throw new OperateExcetion(" mergeCellLists method  operate size is end and operate row is :" + currentrow);
+    }
+
+    private boolean getCellMergedState(int col, int row, int collen, int rowlen) {
+        int currentCol = col - 1;
+        int currentrow = row - 1;
+        try {
+            getInputValueState(col, row, collen, rowlen);
+            if (mergedCellList.size() == 0) {
+//                throw new OperateExcetion("mergedCellList size is 0 ");
+                LogUtils.e("mergedCellList size is 0 ");
+                return false;
+            }
+            // 判断单元格是否合并
+            for (int i = 0; i < mergedCellList.size(); i++) {
+                if (mergedCellList.get(i).mergedRow == currentCol && mergedCellList.get(i).mergedCol == currentrow) {
+                    LogUtils.e(" has merge : " + mergedCellList.get(i).mergedRow + mergedCellList.get(i).mergedCol);
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return false;
+
+    }
+
+    /**
+     * todo 之后再次进行修改
+     *
+     * @throws Exception
+     */
+    public void setCellListsText() throws Exception {//int col,int row,String text,Font font
+        Font font1 = new Font(getBaseFont(), 12, Font.NORMAL);
         font1.setColor(BaseColor.BLACK);
         int col1 = celllists.get(0).size(); // col 的长度
         int row1 = celllists.size(); // row 的长度
-
         LogUtils.e(" col1 num : " + celllists.size());
         for (int j = 0; j < row1; j++) {
             for (int i = 0; i < col1; i++) {
-//                PdfPCell cell = celllists.get(i).get(j);
                 PdfPCell cell = celllists.get(j).get(i);
-//                Phrase elements = new Phrase(String.valueOf(i * col1 + j), font1);
                 Phrase elements = new Phrase(String.format("row %d col %d ", j, i), font1);
                 cell.setPhrase(elements);
             }
         }
     }
 
-    public static LinkedList<AccessibleElementId> usrcelllists = new LinkedList<AccessibleElementId>();
 
-    public static void saveCellListsToDoc(Document document, int beforePading, int afterPading) {
+    public void saveCellListsToDoc(Document document, int beforePading, int afterPading) throws Exception {
         if (celllists.size() == 0) {
-            return;
+            throw new OperateExcetion("saveCellListsToDoc method celllists.size() is 0 ");
         }
         usrcelllists.clear();
-        try {
-            int col = celllists.get(0).size();
-            PdfPTable table = new PdfPTable(col);
-            int row = celllists.size();
-            for (int j = 0; j < row; j++) {
-                for (int i = 0; i < col; i++) {
-//                    PdfPCell cell = celllists.get(i).get(j);
-                    PdfPCell cell = celllists.get(j).get(i);
-                    if (usrcelllists.contains(cell.getId())) {
-//                        LogUtils.d(" show start value is " + i  + " j : " + j);
-                        LogUtils.d("has use cell");
-                    } else {
-//                        LogUtils.d(" show start value is " + i  + " j : " + j);
-                        table.addCell(cell);
-                        usrcelllists.add(cell.getId());
-                    }
-//                    table.addCell(celllists.get(i).get(j));
+        int col = celllists.get(0).size();
+        PdfPTable table = new PdfPTable(col);
+        int row = celllists.size();
+        for (int j = 0; j < row; j++) {
+            for (int i = 0; i < col; i++) {
+                PdfPCell cell = celllists.get(j).get(i);
+                if (usrcelllists.contains(cell.getId())) {
+                    LogUtils.d(" show start value is " + i + " j : " + j);
+                    LogUtils.d("has use cell");
+                } else {
+                    table.addCell(cell);
+                    usrcelllists.add(cell.getId());
                 }
             }
-            table.setSpacingBefore(beforePading); // 前间距
-            table.setSpacingAfter(afterPading); // 后间距
-            document.add(table);
-        } catch (DocumentException e) {
-            e.printStackTrace();
         }
+        table.setSpacingBefore(beforePading); // 前间距
+        table.setSpacingAfter(afterPading); // 后间距
+        document.add(table);
     }
 
     /**
@@ -511,7 +563,7 @@ public class ITextUtils {
      *
      * @return
      */
-    public static boolean test() {
+    public boolean test() {
 
         FileCommonUtil.createOrExistsDir("/sdcard/data");
         // 1. 将图片保存到sd卡中
@@ -546,10 +598,11 @@ public class ITextUtils {
             initCellLists(8, 4);
             addCellLists(3);
             mergeCellLists(1, 1, 1, 3);
-            mergeCellLists(3, 2, 3, 1);
-            mergeCellLists(4, 4, 2, 2);
+//            mergeCellLists(1, 1, 3, 3);
+
             setCellListsText();//0,0,0,0
-            setCellTextColor(0, 0, BaseColor.BLUE);
+            setCellTextColor(5, 5, BaseColor.BLUE);
+            setCellTextColor(1, 1, BaseColor.PINK);
             saveCellListsToDoc(document, 10, 10);
 
             // 插入图片 如果插入资源图片是否会出现插入时间慢的问题 ？
@@ -584,9 +637,8 @@ public class ITextUtils {
                     "壮志饥餐胡虏肉，笑谈渴饮匈奴血。待从头，收拾旧山河，朝天阙。");
 
             //使用工具类关闭 document 与 writer
-            ITextUtils.getAllClose(document, writer);
+            getAllClose(document, writer);
             fileOutputStream.close();
-
             Toast.makeText(Utils.getApp(), "pdf 生成 成功 !", Toast.LENGTH_SHORT).show();
             return true;
         } catch (Exception exception) {
@@ -596,7 +648,7 @@ public class ITextUtils {
         return false;
     }
 
-    private static void clearFontColro() {
+    private void clearFontColro() {
         PdfPCell cell = celllists.get(0).get(0);
         Phrase phrase = cell.getPhrase();
         if (phrase != null) {
@@ -604,13 +656,16 @@ public class ITextUtils {
         }
     }
 
-    private static void addSdCardFileImg(String charPath, Document document) throws Exception {
-//        addSdCardFileImg(charPath, document, 630f, 730f);
+    private void addSdCardFileImg(String charPath, Document document) throws Exception {
         addSdCardFileImg(charPath, document, 120f, 120f);
     }
 
 
-    private static void addSdCardFileImg(String charPath, Document document, float width, float height) throws Exception {
+    private void addSdCardFileImg(String charPath, Document document, float width, float height) throws Exception {
+        if (charPath == null) throw new OperateExcetion("charPath is null");
+        if (document == null) throw new OperateExcetion("document is null");
+        if (width <= 0 || height <= 0)
+            throw new OperateExcetion("width is " + width + " height is  " + height);
         Image image = Image.getInstance(charPath);
         image.scaleToFit(width, height);            //图片大小
         image.setAlignment(Image.MIDDLE);        //图片居中
@@ -618,19 +673,22 @@ public class ITextUtils {
     }
 
 
-    private static void addResuceFileImg(Context context, int drawableImageRes,
-                                         Bitmap.CompressFormat bitmapFormat,
-                                         Document document) throws Exception {
-//        addResuceFileImg(context, drawableImageRes, bitmapFormat, document, 630f, 730f);
+    private void addResuceFileImg(Context context, int drawableImageRes,
+                                  Bitmap.CompressFormat bitmapFormat,
+                                  Document document) throws Exception {
         addResuceFileImg(context, drawableImageRes, bitmapFormat, document, 120f, 120f);
     }
 
 
-    private static void addResuceFileImg(Context context, int drawableImageRes,
-                                         Bitmap.CompressFormat bitmapFormat,
-                                         Document document, float width, float height) throws Exception {
-
+    private void addResuceFileImg(Context context, int drawableImageRes,
+                                  Bitmap.CompressFormat bitmapFormat,
+                                  Document document, float width, float height) throws Exception {
+        if (context == null) throw new OperateExcetion("Context is null");
+        if (bitmapFormat == null) throw new OperateExcetion("bitmapFormat is null");
+        if (width <= 0 || height <= 0)
+            throw new OperateExcetion("width is " + width + " height is  " + height);
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), drawableImageRes);
+        if (bitmap == null) throw new OperateExcetion("bitmap is null");
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(bitmapFormat, 100, stream);
         Image image = Image.getInstance(stream.toByteArray());
@@ -639,15 +697,43 @@ public class ITextUtils {
         document.add(image);
     }
 
-    private static boolean setCellTextColor(int col, int row, BaseColor color) throws Exception {
-        PdfPCell cell1 = celllists.get(row).get(col);
+    private boolean setCellTextColor(int col, int row, BaseColor color) throws Exception {
+        int currentCol = col - 1;
+        int currentRow = row - 1;
+        if (currentCol < 0 || currentRow < 0) {
+            LogUtils.e("输入的行数和列数出错!");
+            return false;
+        }
+        if (celllists.size() == 0) {
+            LogUtils.e("celllists is empty !");
+            return false;
+        }
+        if (celllists.size() < row) {
+            LogUtils.e("celllists size  < row !");
+            return false;
+        }
+        if (celllists.get(row).size() == 0) {
+            LogUtils.e("celllists.get(row).size() is empty !");
+            return false;
+        }
+        if (celllists.get(row).size() < col) {
+            LogUtils.e(" celllists.get(row).size() < col !");
+            return false;
+        }
+//        PdfPCell cell1 = celllists.get(row).get(col);
+        PdfPCell cell1 = celllists.get(currentRow).get(currentCol);
         if (cell1 == null) {
+            LogUtils.e("cell1 is null !");
             return false;
         }
         Phrase phrase = cell1.getPhrase();
         if (phrase == null) {
+            LogUtils.e("phrase is null !");
             return false;
         }
+        // 1. 判断设置字体的内容是否是合并单元格
+        boolean cellMergedState = getCellMergedState(col, row, 1, 1);
+        LogUtils.e("current cell is : " + row + " col " + col);
         // 创建一个单元格对象
         PdfPCell cell = new PdfPCell();
         // 创建一个字体对象
@@ -657,12 +743,30 @@ public class ITextUtils {
         Chunk chunk = new Chunk(phrase.getContent(), font1);
         // 将块对象添加到单元格中
         cell.addElement(chunk);
-        celllists.get(row).set(col, cell);
+        if (cellMergedState) {
+            // 是合并单元格的对象
+            cell.setColspan(cell1.getColspan());
+            cell.setRowspan(cell1.getRowspan());
+            // 获取当前 cell 的位置
+            for (int i = 0; i < celllists.size(); i++) {
+                for (int j = 0; j < celllists.get(i).size(); j++) {
+                    if (celllists.get(i).get(j).getId() == cell1.getId()) {
+                        celllists.get(i).set(j, cell);
+                        break;
+                    }
+                }
+            }
+        } else {
+            celllists.get(currentRow).set(currentCol, cell);
+        }
         return true;
+
 
     }
 
-    public static void addLine(Document document, BaseColor baseColor, float linewidth) throws Exception {
+    public void addLine(Document document, BaseColor baseColor, float linewidth) throws Exception {
+        if (document == null) throw new OperateExcetion("addLine method document is null ");
+        if (linewidth <= 0) throw new OperateExcetion(" linewidth is  " + linewidth);
         LineSeparator line = new LineSeparator();    //实线
         line.setLineColor(baseColor);
         line.setLineWidth(linewidth);
@@ -671,7 +775,10 @@ public class ITextUtils {
 
     }
 
-    public static void addDottedLine(Document document, BaseColor baseColor, float linewidth) throws Exception {
+    public void addDottedLine(Document document, BaseColor baseColor, float linewidth) throws Exception {
+        if (document == null) throw new OperateExcetion("addLine method document is null ");
+        if (baseColor == null) throw new OperateExcetion(" baseColor is null ");
+        if (linewidth <= 0) throw new OperateExcetion(" linewidth is  " + linewidth);
         DottedLineSeparator dottedLineSeparator = new DottedLineSeparator();//点线
         dottedLineSeparator.setLineColor(baseColor);
         dottedLineSeparator.setLineWidth(linewidth);
@@ -680,12 +787,25 @@ public class ITextUtils {
 
     }
 
-    public static void addUnderLineContent(Document document, String content) throws Exception {
+    public void addUnderLineContent(Document document, String value) throws Exception {
+        if (document == null) throw new OperateExcetion("addLine method document is null ");
+        if (value == null)
+            value = "";
 //        下划线
         Font font14Under = new Font(getBaseFont(), 14, Font.UNDERLINE);
-        Paragraph elements = new Paragraph(content, font14Under);
+        Paragraph elements = new Paragraph(value, font14Under);
         document.add(elements);
 
+    }
+
+
+    class OperateExcetion extends Exception {
+        public OperateExcetion() {
+        }
+
+        public OperateExcetion(String message) {
+            super(message);
+        }
     }
 }
 
