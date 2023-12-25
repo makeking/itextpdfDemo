@@ -27,6 +27,7 @@ public class HomeActivity extends AppCompatActivity {
         homeBinding = ActivityHomeBinding.bind(view);
         setContentView(homeBinding.getRoot());
         ITextUtils.getInstace().test();
+        ITextUtils.getInstace().test1();
         initView();
     }
 
@@ -34,6 +35,7 @@ public class HomeActivity extends AppCompatActivity {
         homeBinding.fab.setOnClickListener(v ->
         {
             boolean result =  ITextUtils.getInstace().test();
+       ITextUtils.getInstace().test1();
 
 
         });

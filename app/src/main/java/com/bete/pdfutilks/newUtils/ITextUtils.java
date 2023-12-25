@@ -24,6 +24,7 @@ import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.BaseFont;
@@ -57,6 +58,8 @@ public class ITextUtils {
 
     static {
         mergedCellList.clear();
+
+
         celllists = new LinkedList<>();
         celllists.add(new LinkedList<>());
         for (LinkedList<PdfPCell> cells : celllists) {
@@ -184,10 +187,10 @@ public class ITextUtils {
         document.add(table);
     }
 
-    public void addNullLine(Document document, int insertLineNum, int... height) throws Exception {
+    public void addNullLine(Document document, float insertLineNum, float... height) throws Exception {
         if (document == null) throw new OperateExcetion("document is null");
         if (insertLineNum <= 0) throw new OperateExcetion("insertLineNum is " + insertLineNum);
-        int LineHeight = 1;
+        float LineHeight = 1;
         if (height.length > 0) {
             LineHeight = height[0] <= 0 ? 1 : height[0];
         }
@@ -409,6 +412,24 @@ public class ITextUtils {
 
     }
 
+    public void initCellLists(int col, int row, List<Integer>... mergeList) throws OperateExcetion {
+        if (col <= 0 || row <= 0)
+            throw new OperateExcetion("init celll row or col below 0!");
+        // 8 列 4 行
+        clearCellLists();
+        for (int j = 0; j < row; j++) {
+            LinkedList<PdfPCell> a = new LinkedList<>();
+            for (int i = 0; i < col; i++) {
+                PdfPCell cell = new PdfPCell();
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);//水平居中
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);//垂直居中
+                a.add(cell);
+            }
+            celllists.add(a);
+        }
+
+    }
+
     public static ITextUtils getInstace() {
         return new ITextUtils();
     }
@@ -515,7 +536,7 @@ public class ITextUtils {
      *
      * @throws Exception
      */
-    public void setCellListsText() throws Exception {//int col,int row,String text,Font font
+    public void setCellListsText1() throws Exception {//int col,int row,String text,Font font
         Font font1 = new Font(getBaseFont(), 12, Font.NORMAL);
         font1.setColor(BaseColor.BLACK);
         int col1 = celllists.get(0).size(); // col 的长度
@@ -523,15 +544,40 @@ public class ITextUtils {
         LogUtils.e(" col1 num : " + celllists.size());
         for (int j = 0; j < row1; j++) {
             for (int i = 0; i < col1; i++) {
-                PdfPCell cell = celllists.get(j).get(i);
-                Phrase elements = new Phrase(String.format("row %d col %d ", j, i), font1);
-                cell.setPhrase(elements);
+                setCellListsText(i, j, String.format("row %d col %d ", j, i), font1);
             }
         }
     }
 
+    public void setCellListsText(float size, List<List<String>> valueList) throws Exception {//int col,int row,String text,Font font
+        Font font1 = FontFactory.getFont(FontFactory.HELVETICA, size, BaseColor.BLACK);
+        setCellListsText(font1, valueList);
+    }
 
-    public void saveCellListsToDoc(Document document, int beforePading, int afterPading) throws Exception {
+    public void setCellListsText(Font font1, List<List<String>> valueList) throws Exception {//int col,int row,String text,Font font
+        int col1 = celllists.get(0).size(); // col 的长度
+        int row1 = celllists.size(); // row 的长度
+        LogUtils.e(" col1 num : " + celllists.size());
+        for (int j = 0; j < row1; j++) {
+            for (int i = 0; i < col1; i++) {
+//                setCellListsText(i, j, String.format("row %d col %d ", j, i), font1);
+                setCellListsText(i, j, valueList.get(j).get(i), font1);
+            }
+        }
+    }
+
+    public void setCellListsText(int col, int row, String text, Font font) {
+        PdfPCell cell = celllists.get(row).get(col);
+        Phrase elements = new Phrase(text, font);
+        cell.setPhrase(elements);
+    }
+
+    public void saveCellListsToDoc() {
+
+    }
+
+    public void saveCellListsToDoc(Document document, int beforePading, int afterPading,
+                                   float[]... floatArray) throws Exception {
         if (celllists.size() == 0) {
             throw new OperateExcetion("saveCellListsToDoc method celllists.size() is 0 ");
         }
@@ -553,6 +599,49 @@ public class ITextUtils {
         }
         table.setSpacingBefore(beforePading); // 前间距
         table.setSpacingAfter(afterPading); // 后间距
+
+        table.setWidthPercentage(80);
+        // 设置表格的宽度
+        table.setTotalWidth(180);
+        // 也可以每列分别设置宽度
+        if (floatArray.length > 0) {
+            table.setTotalWidth(floatArray[0]);
+        }
+        document.add(table);
+    }
+
+    public void saveCellListsToDoc(Document document, int beforePading, int afterPading,
+                                   Font titleFont, Font contentFont,
+                                   float[]... floatArray) throws Exception {
+        if (celllists.size() == 0) {
+            throw new OperateExcetion("saveCellListsToDoc method celllists.size() is 0 ");
+        }
+        usrcelllists.clear();
+        int col = celllists.get(0).size();
+        PdfPTable table = new PdfPTable(col);
+        int row = celllists.size();
+        for (int j = 0; j < row; j++) {
+            for (int i = 0; i < col; i++) {
+                PdfPCell cell = celllists.get(j).get(i);
+                if (usrcelllists.contains(cell.getId())) {
+                    LogUtils.d(" show start value is " + i + " j : " + j);
+                    LogUtils.d("has use cell");
+                } else {
+                    table.addCell(cell);
+                    usrcelllists.add(cell.getId());
+                }
+            }
+        }
+        table.setSpacingBefore(beforePading); // 前间距
+        table.setSpacingAfter(afterPading); // 后间距
+
+        table.setWidthPercentage(80);
+        // 设置表格的宽度
+        table.setTotalWidth(180);
+        // 也可以每列分别设置宽度
+        if (floatArray.length > 0) {
+            table.setTotalWidth(floatArray[0]);
+        }
         document.add(table);
     }
 
@@ -587,7 +676,7 @@ public class ITextUtils {
             }
 
             //创建Document 对象
-            Document document = new Document();
+            Document document = new Document(PageSize.A4, 50, 50, 30, 30);
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             PdfWriter writer = PdfWriter.getInstance(document, fileOutputStream);
             //打开文件
@@ -600,7 +689,7 @@ public class ITextUtils {
             mergeCellLists(1, 1, 1, 3);
 //            mergeCellLists(1, 1, 3, 3);
 
-            setCellListsText();//0,0,0,0
+            setCellListsText1();//0,0,0,0
             setCellTextColor(5, 5, BaseColor.BLUE);
             setCellTextColor(1, 1, BaseColor.PINK);
             saveCellListsToDoc(document, 10, 10);
@@ -648,6 +737,93 @@ public class ITextUtils {
         return false;
     }
 
+    public boolean test1() {
+        try {
+            FileCommonUtil.createOrExistsDir("/sdcard/data");
+            // 1. 将图片保存到sd卡中
+            File file = new File("/sdcard/data/itext" + System.currentTimeMillis() + ".pdf");
+            if (file.exists()) {
+                file.delete();
+            }
+            //创建Document 对象
+            Document document = new Document(PageSize.A4, 10, 10, 30, 30);
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            PdfWriter writer = PdfWriter.getInstance(document, fileOutputStream);
+            //打开文件
+            document.open();
+
+            addFont(document, "Report Tilte", 18,
+                    Element.ALIGN_CENTER
+                    , 26);
+
+            //使用工具类关闭 document 与 writer
+            initCellLists(4, 2);
+            List<List<String>> inputValue = new LinkedList<>();
+            for (int i = 0; i < 2; i++) {
+                LinkedList<String> linkedList = new LinkedList<>();
+                for (int j = 0; j < 4; j++) {
+                    linkedList.add("i=" + i + " j=" + j);
+                }
+                inputValue.add(linkedList);
+            }
+            mergeCellLists(1, 1, 1, 3);
+            setCellListsText(12, inputValue);//0,0,0,0
+            saveCellListsToDoc(document, 10, 10);
+
+//            addNullLine(document, 1, 0.001f);
+
+            initCellLists(9, 25);
+
+            // 设置文字和合并单元格
+
+            List<List<String>> inputValue1 = new LinkedList<>();
+            for (int i = 0; i < 25; i++) {
+                List<String> inputValue2 = new LinkedList<>();
+                for (int j = 0; j < 9; j++) {
+                    inputValue2.add("111");
+                }
+                inputValue1.add(inputValue2);
+            }
+            setCellListsText(12, inputValue1);//0,0,0,0
+
+
+            int spaceWidth = 180 / 16;
+            float[] floats = new float[9];
+            for (int i = 0; i < 9; i++)
+                floats[i] = (i == 0 || i == 5) ? spaceWidth : (2 * spaceWidth);
+            saveCellListsToDoc(document, 10, 10, floats);
+            getAllClose(document, writer);
+            fileOutputStream.close();
+            Toast.makeText(Utils.getApp(), "pdf 生成 成功 !", Toast.LENGTH_SHORT).show();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtils.e("ex : " + e);
+        }
+        return false;
+    }
+
+    public void addFont(Document document, String value, float size, int alignment
+            , float padingBootom
+    ) throws Exception {
+        Font font1 = new Font(getBaseFont(), size, Font.NORMAL);
+        font1.setColor(BaseColor.BLACK);
+        addFont(document, value, font1, alignment, padingBootom);
+    }
+
+    private void addFont(Document document, String value, Font font1, int alignment
+            , float padingBootom
+    ) throws Exception {
+        if (document == null)
+            throw new OperateExcetion("Document is null ");
+        if (StringUtils.isEmpty(value))
+            value = "";
+        Paragraph para1 = new Paragraph(value, font1);
+        para1.setAlignment(alignment);
+        para1.setLeading(padingBootom);
+        document.add(para1);
+    }
+
     private void clearFontColro() {
         PdfPCell cell = celllists.get(0).get(0);
         Phrase phrase = cell.getPhrase();
@@ -655,6 +831,7 @@ public class ITextUtils {
             phrase.getFont().setColor(BaseColor.BLACK);
         }
     }
+
 
     private void addSdCardFileImg(String charPath, Document document) throws Exception {
         addSdCardFileImg(charPath, document, 120f, 120f);
@@ -694,6 +871,10 @@ public class ITextUtils {
         Image image = Image.getInstance(stream.toByteArray());
         image.scaleToFit(width, height);            //图片大小
         image.setAlignment(Image.MIDDLE);        //图片居中
+        document.add(image);
+    }
+
+    private void addImg(Image image, Document document) throws Exception {
         document.add(image);
     }
 

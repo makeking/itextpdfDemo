@@ -82,8 +82,7 @@ public class  SplashActivity extends BaseActivity {
      * 判断是否第一次登录
      */
     private void startNextActivity() {
-
-        startActivity(new Intent(this, HomeActivity.class));
+        startActivity(new Intent(this, MainActivity.class));
         finish();
     }
 
