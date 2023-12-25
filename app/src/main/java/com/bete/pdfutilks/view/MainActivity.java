@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             /*             文字相关的内容                          */
             // 1. 将所有的对象全部都放置到列表中，然后将列表写入对象中
             instace.addFont(document, "Report Tilte", 18,
-                    Element.ALIGN_CENTER, 26, false);
+                    Element.ALIGN_CENTER, 26, false, false);
 
             /*             表格1                          */
             // 数据1
@@ -141,16 +141,17 @@ public class MainActivity extends AppCompatActivity {
             image.setAlignment(Image.MIDDLE);        //图片居中
 //            images.add(image);
 //            instace.addImageList(document, images, true);
-            instace.initCellLists(1, 1);
+            instace.initCellLists(2, 1);
             instace.setCellListsImg(0, 0, image);
+            instace.setCellListsText(1, 0, "222222", font1);
             instace.saveCellListsToDoc(document, 10, 10, Element.ALIGN_LEFT);
             /*                       文字                 */
             instace.addFont(document, "  ", 18,
-                    Element.ALIGN_CENTER, 18, false);
+                    Element.ALIGN_CENTER, 18, false, false);
             /*                       文字                 */
             // 添加文字
             instace.addFont(document, "When the Ct value of the sample to be tested is outside the reference range and there is a typical S-shapedamplification curve, the test result is positive; \n When the Ct value of the sample to be tested is within the reference range, or the Ct value is outside the referencerange but there is no typical S-shaped amplification curve, the test result is negative.",
-                    6f, Element.ALIGN_LEFT, 26, true);
+                    6f, Element.ALIGN_LEFT, 26, true, false);
 
             instace.getAllClose(document, writer);
             fileOutputStream.close();

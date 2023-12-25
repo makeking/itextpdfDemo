@@ -623,9 +623,15 @@ public class NewITextUtils {
 
 
     public void addFont(Document document, String value, float size, int alignment
-            , float padingBootom, boolean hasFrame
+            , float padingBootom, boolean hasFrame, boolean hasUnderline
     ) throws Exception {
-        Font font1 = new Font(getBaseFont(), size, Font.NORMAL);
+        Font font1;
+        if (hasUnderline) {
+            font1 = new Font(getBaseFont(), size, Font.UNDEFINED);
+        } else {
+            font1 = new Font(getBaseFont(), size, Font.NORMAL);
+
+        }
         font1.setColor(BaseColor.BLACK);
         addFont(document, value, font1, alignment, padingBootom, hasFrame);
     }
