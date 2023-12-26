@@ -1,6 +1,7 @@
 package com.bete.pdfutilks.view;
 
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -61,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
             // 1. 将所有的对象全部都放置到列表中，然后将列表写入对象中
             instace.addFont(document, "Report Tilte", 18,
                     Element.ALIGN_CENTER, 26, false, false);
-
             /*             表格1                          */
             // 数据1
             List<List<String>> inputValue = new LinkedList<>();
@@ -136,14 +136,19 @@ public class MainActivity extends AppCompatActivity {
 
             /*                       图片                 */
 //            List<Image> images = new LinkedList<>();
+
             Image image = Image.getInstance("/sdcard/data/gfgimage.jpg");
-            image.scaleToFit(120f, 120f);            //图片大小
+//            image.scaleToFit(120f, 120f);            //图片大小
             image.setAlignment(Image.MIDDLE);        //图片居中
 //            images.add(image);
 //            instace.addImageList(document, images, true);
             instace.initCellLists(2, 1);
             instace.setCellListsImg(0, 0, image);
-            instace.setCellListsText(1, 0, "222222", font1);
+            Font font12 = new Font(instace.getBaseFont(), 18, Font.NORMAL, BaseColor.BLACK);
+            instace.setCellListsText(1, 0, "撒旦发多少个发动广大粉丝公司的人风格的大师傅敢死队风格合适的", font12);
+
+
+//            instace.setCellListsText(1, 0, "222222", font1);
             instace.saveCellListsToDoc(document, 10, 10, Element.ALIGN_LEFT);
             /*                       文字                 */
             instace.addFont(document, "  ", 18,

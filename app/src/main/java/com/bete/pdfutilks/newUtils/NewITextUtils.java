@@ -85,7 +85,10 @@ public class NewITextUtils {
 //                baseFont = BaseFont.createFont("assets/fonts/zkceyyt.ttf", IDENTITY_H, BaseFont.EMBEDDED);
                 // 测试使用 ass默认的字体
 //                baseFont = BaseFont.createFont("assets/fonts/zkceyyt.ttf", IDENTITY_H, BaseFont.EMBEDDED);
-                baseFont = BaseFont.createFont("assets/fonts/brandon_bold.ttf", IDENTITY_H, BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("assets/fonts/brandon_bold.otf", IDENTITY_H, BaseFont.EMBEDDED);
+                baseFont = BaseFont.createFont("assets/fonts/SourceHanSans-Light.otf", IDENTITY_H, BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("assets/fonts/Roboto-Black.ttf", IDENTITY_H, BaseFont.EMBEDDED);
+//                baseFont = BaseFont.createFont("assets/fonts/Roboto-Light.ttf", IDENTITY_H, BaseFont.EMBEDDED);
 //                baseFont = BaseFont.createFont("assets/fonts/syst.ttf", IDENTITY_H, BaseFont.EMBEDDED);
 //                baseFont = BaseFont.createFont("STSong-Light", IDENTITY_H, BaseFont.EMBEDDED);
 
@@ -94,8 +97,13 @@ public class NewITextUtils {
 //                baseFont = BaseFont.createFont("assets/fonts/brandon_medium.otf", IDENTITY_H, BaseFont.EMBEDDED);
             } catch (DocumentException e) {
                 e.printStackTrace();
+                LogUtils.e("11111111111111111 222" + e);
             } catch (IOException e) {
                 e.printStackTrace();
+                LogUtils.e("11111111111111111 333333333333" + e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                LogUtils.e("11111111111111111 44444444" + e);
             }
             Font font1 = new Font(baseFont, 12, Font.NORMAL);
             font1.setColor(BaseColor.BLACK);
@@ -626,12 +634,10 @@ public class NewITextUtils {
             , float padingBootom, boolean hasFrame, boolean hasUnderline
     ) throws Exception {
         Font font1;
-        if (hasUnderline) {
+        if (hasUnderline)
             font1 = new Font(getBaseFont(), size, Font.UNDEFINED);
-        } else {
+        else
             font1 = new Font(getBaseFont(), size, Font.NORMAL);
-
-        }
         font1.setColor(BaseColor.BLACK);
         addFont(document, value, font1, alignment, padingBootom, hasFrame);
     }
@@ -812,21 +818,51 @@ public class NewITextUtils {
 
     }
 
-    public void addImageList(Document document, List<Image> images, boolean hasFrame
+//    public void addImageList(Document document, List<Image> images, boolean hasFrame
+//
+//    ) throws Exception {
+//        float totalWidth = 180F;
+//        float floats1 = totalWidth / images.size();
+//        float[] floats = new float[images.size()];
+//        for (int i = 0; i < images.size(); i++)
+//            floats[i] = floats1;
+//
+//        addImageList(document, images, hasFrame, 0, 0,
+//                80f, totalWidth, floats);
+//
+//    }
 
-    ) throws Exception {
-        float totalWidth = 180F;
-        float floats1 = totalWidth / images.size();
-        float[] floats = new float[images.size()];
-        for (int i = 0; i < images.size(); i++)
-            floats[i] = floats1;
+//    public void addImageList(Document document, List<Image> images, boolean hasFrame
+//            , int beforePading,
+//                             int afterPading,
+//                             float widthPercentage,
+//                             float totalWidth,
+//                             float[] columnWidth
+//
+//    ) throws Exception {
+//        if (images.size() == 1 && !hasFrame) {
+//            document.add(images.get(0));
+//        } else {
+//            PdfPTable table = new PdfPTable(images.size());
+//            for (int i = 0; i < images.size(); i++) {
+//                Image image = images.get(i);
+//                table.addCell(image);
+//            }
+//            table.setSpacingBefore(beforePading); // 前间距
+//            table.setSpacingAfter(afterPading); // 后间距
+//            table.setWidthPercentage(widthPercentage);
+//            // 设置表格的宽度
+//            table.setTotalWidth(totalWidth);
+//            // 也可以每列分别设置宽度
+//            table.setTotalWidth(columnWidth);
+//            document.add(table);
+//
+//        }
+//
+//    }
 
-        addImageList(document, images, hasFrame, 0, 0,
-                80f, totalWidth, floats);
 
-    }
-
-    public void addImageList(Document document, List<Image> images, boolean hasFrame
+    public void addImageList(Document document, List<Bitmap> images, boolean hasFrame
             , int beforePading,
                              int afterPading,
                              float widthPercentage,
@@ -835,12 +871,23 @@ public class NewITextUtils {
 
     ) throws Exception {
         if (images.size() == 1 && !hasFrame) {
-            document.add(images.get(0));
+            Bitmap bitmap = images.get(0);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            Image image = Image.getInstance(stream.toByteArray());
+//            image.scaleToFit(width, height);            //图片大小
+            image.setAlignment(Image.MIDDLE);        //图片居中
+            document.add(image);
         } else {
             PdfPTable table = new PdfPTable(images.size());
             for (int i = 0; i < images.size(); i++) {
-                Image image = images.get(i);
-                table.addCell(image);
+                Bitmap bitmap = images.get(i);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                Image image = Image.getInstance(stream.toByteArray());
+//            image.scaleToFit(width, height);            //图片大小
+                image.setAlignment(Image.MIDDLE);        //图片居中
+                document.add(image);
             }
             table.setSpacingBefore(beforePading); // 前间距
             table.setSpacingAfter(afterPading); // 后间距

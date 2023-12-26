@@ -874,6 +874,26 @@ public class ITextUtils {
         document.add(image);
     }
 
+    private void setCellListsImg(
+            int row, int col,
+            Context context,
+            Bitmap bitmap,
+            Document document, float width, float height) throws Exception {
+        if (context == null) throw new OperateExcetion("Context is null");
+        if (bitmap == null) throw new OperateExcetion("bitmapFormat is null");
+        if (width <= 0 || height <= 0)
+            throw new OperateExcetion("width is " + width + " height is  " + height);
+//        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), drawableImageRes);
+        if (bitmap == null) throw new OperateExcetion("bitmap is null");
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        Image image = Image.getInstance(stream.toByteArray());
+        image.scaleToFit(width, height);            //图片大小
+        image.setAlignment(Image.MIDDLE);        //图片居中
+        PdfPCell cell = celllists.get(row).get(col);
+        cell.setImage(image);
+    }
+
     private void addImg(Image image, Document document) throws Exception {
         document.add(image);
     }
